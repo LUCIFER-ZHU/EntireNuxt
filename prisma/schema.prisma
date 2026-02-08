@@ -1,273 +1,159 @@
 // ============================================================
 // Prisma Schema 定义文件
-// 文件路径: prisma/schema.prisma
-// 作用: 定义数据库表结构、关系、索引和约束
-// 文档: https://www.prisma.io/docs/orm/prisma-schema
-//
-// 注意：Prisma 7+ 的数据库连接 URL 配置在 prisma.config.ts 中
-//
-// 常用命令:
-//   npx prisma migrate dev    - 创建并应用迁移（开发环境）
-//   npx prisma db push        - 直接推送 schema 到数据库（原型阶段）
-//   npx prisma studio         - 打开可视化数据库管理界面
-//   npx prisma generate       - 生成 Prisma Client
+// 文档: https://pris.ly/d/prisma-schema
 // ============================================================
 
-// --------------------------------------------------------
-// 1. 生成器配置
-// 作用: 告诉 Prisma 如何生成客户端代码
-// --------------------------------------------------------
 generator client {
-  // provider: 指定生成器类型
-  // "prisma-client-js" 是官方提供的 TypeScript/JavaScript 生成器
-  provider = "prisma-client-js"
-
-  // output: 自定义生成路径（可选，默认在 node_modules/.prisma/client）
-  // output = "../node_modules/.prisma/client"
-
-  // previewFeatures: 启用实验性功能（按需开启）
-  // previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
-// --------------------------------------------------------
-// 2. 数据源配置
-// 注意：Prisma 7+ 中，数据库连接 URL 配置在 prisma.config.ts 中
-// 这里只需要指定 provider
-// --------------------------------------------------------
 datasource db {
-  // provider: 数据库类型
-  // 支持: postgresql, mysql, sqlite, sqlserver, mongodb, cockroachdb
   provider = "postgresql"
 }
 
 // ============================================================
-// 3. 数据模型定义
-// ============================================================
-
-// --------------------------------------------------------
-// 3.1 用户模型 (User)
-// 说明: 存储用户账户信息，是系统的核心实体
+// 1. 用户模型 (User)
+// 说明: 系统的核心用户表，支持多种角色和状态管理
 // 关系:
-//   - 1对多: User → Session (一个用户可有多个登录会话)
-//   - 1对多: User → Product (一个用户可发布多个产品)
-//   - 1对多: User → ContactForm (一个用户可提交多个表单)
-// --------------------------------------------------------
+//   - 1对多: User → Product (一个用户可以发布多个产品)
+//   - 1对多: User → ContactForm (一个用户可以提交多个表单)
+//   - 1对多: User → Customer (一个业务员可以跟进多个客户)
+// ============================================================
 model User {
   // --- 主键 ---
   id String @id @default(uuid()) @db.Uuid
-    // @id: 标记此字段为主键
-    // @default(uuid()): 自动生成 UUID v4 作为默认值
-    // @db.Uuid: 在 PostgreSQL 中使用 UUID 类型存储（更高效）
+    // UUID 主键，使用数据库原生 UUID 生成
 
   // --- 认证信息 ---
   email String @unique @db.VarChar(255)
-    // @unique: 唯一约束，用于登录识别
-    // @db.VarChar(255): 限制最大长度，防止存储攻击
+    // 邮箱地址，用于登录，全局唯一
 
   password String @db.VarChar(255)
-    // 存储 bcrypt 加密后的密码哈希
-    // ⚠️ 警告: 永远不要存储明文密码！
-    // 加密在服务端完成，见 server/utils/password.ts
+    // 密码哈希（使用 bcrypt 加密存储，绝不存明文）
 
-  emailVerified DateTime? @db.Timestamp(6)
-    // 邮箱验证时间，null 表示未验证
-    // ? 表示可选字段（nullable）
-    // @db.Timestamp(6): 微秒精度时间戳
-
-  // --- 基础信息 ---
-  name String? @db.VarChar(100)
-    // 用户昵称/姓名
+  // --- 基本信息 ---
+  name String @db.VarChar(100)
+    // 用户显示名称
 
   avatar String? @db.VarChar(500)
-    // 头像 URL 或文件路径
-    // 如果使用 Supabase Storage，存储的是文件路径
+    // 头像 URL（可选）
 
-  phone String? @db.VarChar(20)
-    // 联系电话
-
-  company String? @db.VarChar(200)
-    // 公司名称
-
-  // --- 角色与权限 ---
+  // --- 权限与状态 ---
   role UserRole @default(USER)
-    // 用户角色，使用下方定义的枚举
-    // @default(USER): 默认值为普通用户
+    // 用户角色，默认普通用户
 
   status UserStatus @default(ACTIVE)
-    // 账户状态，用于软删除/封禁
+    // 账户状态，默认激活
 
   // --- 时间戳 ---
   createdAt DateTime @default(now()) @db.Timestamp(6)
-    // 记录创建时间，@default(now()) 自动填充当前时间
+    // 创建时间，自动设置
 
   updatedAt DateTime @updatedAt @db.Timestamp(6)
-    // 记录最后更新时间，@updatedAt 自动更新
+    // 更新时间，自动更新
 
   // --- 关系定义 ---
-  sessions Session[]
-    // 关联 Session 模型
-    // 表示"一个用户可以有多个登录会话"
-    // Prisma 会自动在 Session 表创建 userId 外键
-
   products Product[]
-    // 关联 Product 模型（用户发布的产品）
+    // 用户发布的产品列表
 
   contactForms ContactForm[]
-    // 关联 ContactForm 模型（用户提交的询盘表单）
+    // 用户提交的表单列表
 
   customers Customer[]
-    // 关联 Customer 模型（业务员跟进的客户）
+    // 业务员跟进的客户列表（反向关系）
 
   // --- 索引优化 ---
   @@index([email])
-    // 为 email 创建索引，加速登录查询
-    // 虽然 email 已有 @unique（自动创建索引），显式声明更清晰
+    // 加速邮箱查找（登录时使用）
 
-  @@index([createdAt])
-    // 为 createdAt 创建索引，加速"按注册时间排序"查询
+  @@index([role])
+    // 加速按角色筛选
 
-  @@index([role, status])
-    // 复合索引，加速"查找所有活跃用户"等组合查询
+  @@index([status])
+    // 加速按状态筛选
 
   @@map("users")
-    // 映射到数据库中的实际表名（小写复数形式）
-    // 如果不指定，Prisma 默认使用模型名（User）
 }
 
-// --------------------------------------------------------
-// 3.2 会话模型 (Session)
-// 说明: 管理用户登录会话，支持多设备登录
-// 安全特性:
-//   - 每个会话有独立的 refresh token
-//   - 可单独撤销某个会话（如登出某设备）
-//   - 记录登录 IP 和设备信息用于安全审计
-// --------------------------------------------------------
-model Session {
-  id String @id @default(uuid()) @db.Uuid
-
-  // --- 外键关系 ---
-  userId String @db.Uuid
-    // 关联到 User.id 的外键
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    // @relation: 定义与 User 模型的关系
-    // fields: 本表的外键字段（userId）
-    // references: 关联表的主键字段（User.id）
-    // onDelete: Cascade 表示删除用户时级联删除其所有会话
-
-  // --- Token 信息 ---
-  refreshToken String @unique @db.VarChar(500)
-    // Refresh Token 的哈希值（不是明文！）
-    // 用于在 access_token 过期后获取新的 token
-
-  expiresAt DateTime @db.Timestamp(6)
-    // Refresh Token 过期时间
-    // 超过此时间后，用户需要重新登录
-
-  // --- 设备信息（用于安全审计）---
-  ipAddress String? @db.VarChar(45)
-    // 登录 IP 地址（支持 IPv6 所以用 45 字符）
-
-  userAgent String? @db.VarChar(500)
-    // 浏览器 User-Agent 字符串
-
-  // --- 时间戳 ---
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-  lastUsedAt DateTime @default(now()) @db.Timestamp(6)
-    // 最后使用时间，用于识别长期未用的会话
-
-  @@index([userId])
-    // 加速"查找某用户的所有会话"查询
-
-  @@index([refreshToken])
-    // 加速 Token 验证查询（虽然已有 @unique，显式声明更清晰）
-
-  @@index([expiresAt])
-    // 加速"查找过期会话"查询（用于清理任务）
-
-  @@map("sessions")
-}
-
-// --------------------------------------------------------
-// 3.3 产品模型 (Product)
-// 说明: 产品/商品信息表
-// --------------------------------------------------------
+// ============================================================
+// 2. 产品模型 (Product)
+// 说明: 产品信息表，支持草稿、审核、发布等状态流转
+// 关系:
+//   - 多对1: Product → User (每个产品属于一个用户)
+// ============================================================
 model Product {
+  // --- 主键 ---
   id String @id @default(uuid()) @db.Uuid
 
-  // --- 外键关系 ---
-  userId String @db.Uuid
+  // --- 关联用户 ---
+  userId String @db.Uuid @map("user_id")
+    // 外键：关联到 User 表
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    // 关系：产品所属用户
+    // onDelete: Cascade 表示删除用户时级联删除其产品
 
   // --- 产品信息 ---
-  name String @db.VarChar(255)
-    // 产品名称
-
-  slug String @unique @db.VarChar(255)
-    // URL 友好的唯一标识（如 "cnc-machine-2024"）
-    // 用于构建产品详情页链接
+  title String @db.VarChar(200)
+    // 产品标题
 
   description String? @db.Text
-    // 产品描述，使用 Text 类型支持长文本
+    // 产品描述（支持富文本）
 
-  price Decimal? @db.Decimal(12, 2)
-    // 价格，使用 Decimal 避免浮点数精度问题
-    // @db.Decimal(12, 2): 共 12 位数字，其中 2 位小数
+  price Decimal? @db.Decimal(10, 2)
+    // 价格，最多10位数字，2位小数
 
-  currency String? @default("USD") @db.VarChar(3)
-    // 货币代码（ISO 4217），默认美元
-
-  // --- 媒体 ---
-  images String[] @default([])
+  images String[] @db.VarChar(500)
     // 产品图片 URL 数组
-    // PostgreSQL 支持数组类型
+
+  category String? @db.VarChar(100)
+    // 产品分类
+
+  tags String[] @db.VarChar(50)
+    // 产品标签数组
 
   // --- 状态 ---
   status ProductStatus @default(DRAFT)
-    // 发布状态
-
-  viewCount Int @default(0)
-    // 浏览次数
+    // 产品状态
 
   // --- 时间戳 ---
   createdAt DateTime @default(now()) @db.Timestamp(6)
   updatedAt DateTime @updatedAt @db.Timestamp(6)
 
-  publishedAt DateTime? @db.Timestamp(6)
-    // 实际发布时间（与 createdAt 不同，这是点击"发布"的时间）
-
-  // --- SEO ---
-  metaTitle String? @db.VarChar(255)
-  metaDescription String? @db.VarChar(500)
-
   @@index([userId])
-  @@index([slug])
   @@index([status, createdAt])
-    // 复合索引，加速"查找已发布产品并按时间排序"
+  @@index([category])
 
   @@map("products")
 }
 
-// --------------------------------------------------------
-// 3.4 询盘表单模型 (ContactForm)
-// 说明: 用户提交的联系/询盘表单
-// --------------------------------------------------------
+// ============================================================
+// 3. 联系表单模型 (ContactForm)
+// 说明: 存储用户的咨询、反馈等表单提交
+// 关系:
+//   - 多对1: ContactForm → User (可选，已登录用户提交)
+// ============================================================
 model ContactForm {
+  // --- 主键 ---
   id String @id @default(uuid()) @db.Uuid
 
-  // --- 外键关系（可选）---
-  userId String? @db.Uuid
-    // ? 表示未登录用户也可以提交表单
+  // --- 关联用户（可选）---
+  userId String? @db.Uuid @map("user_id")
+    // 如果用户已登录，记录用户ID
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-    // onDelete: SetNull 表示删除用户时，保留表单但清空 userId
+    // onDelete: SetNull 表示删除用户时保留表单，只是清空关联
 
   // --- 联系信息 ---
   name String @db.VarChar(100)
+    // 提交者姓名
+
   email String @db.VarChar(255)
+    // 联系邮箱
+
   phone String? @db.VarChar(20)
-  company String? @db.VarChar(200)
+    // 联系电话（可选）
 
   // --- 表单内容 ---
   subject String @db.VarChar(255)
@@ -276,7 +162,7 @@ model ContactForm {
   message String @db.Text
     // 详细内容
 
-  productId String? @db.Uuid
+  productId String? @db.Uuid @map("product_id")
     // 关联的产品 ID（如果是产品询盘）
 
   // --- 状态 ---
@@ -284,8 +170,8 @@ model ContactForm {
     // 处理状态
 
   // --- 时间戳 ---
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-  updatedAt DateTime @updatedAt @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamp(6) @map("updated_at")
 
   @@index([userId])
   @@index([status, createdAt])
@@ -404,15 +290,15 @@ model Customer {
     // 备注信息
 
   // --- 关联业务员 ---
-  assignedTo String? @db.Uuid
+  assignedTo String? @db.Uuid @map("assigned_to")
     // 分配给哪个用户（业务员）
 
   assignedUser User? @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
     // 关联到 User 模型
 
   // --- 时间戳 ---
-  createdAt DateTime @default(now()) @db.Timestamp(6)
-  updatedAt DateTime @updatedAt @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt DateTime @updatedAt @db.Timestamp(6) @map("updated_at")
 
   // --- 索引优化 ---
   @@index([name])

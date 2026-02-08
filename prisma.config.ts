@@ -5,8 +5,11 @@
 // 文档: https://www.prisma.io/docs/orm/prisma-schema/overview
 // ============================================================
 
-import 'dotenv/config'
-// 加载 .env 文件中的环境变量
+import dotenv from 'dotenv'
+import { resolve } from 'path'
+
+// 加载 .env.development 文件中的环境变量
+dotenv.config({ path: resolve(process.cwd(), '.env.development') })
 
 import { defineConfig } from 'prisma/config'
 // Prisma 7+ 的配置定义函数
@@ -32,9 +35,8 @@ export default defineConfig({
   // Prisma 7.3.0 的 defineConfig 类型只支持 url 和 shadowDatabaseUrl
   // 对于 Supabase，迁移时使用 DIRECT_URL，运行时使用 DATABASE_URL
   datasource: {
-    // 应用运行时使用的连接 URL（连接池）
-    // 在 Supabase 中，这是 Connection Pooler URL (端口 6543)
-    url: process.env.DATABASE_URL,
+    // 使用会话池端口 5432（Prisma 迁移用）
+    url: process.env.DIRECT_URL,
 
     // 影子数据库 URL（可选，用于迁移时对比 schema 差异）
     // shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,

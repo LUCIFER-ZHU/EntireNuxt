@@ -6,6 +6,9 @@
 // ============================================================
 
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
+const { Pool } = pg
 // 从 @prisma/client 导入 PrismaClient 类
 // 这是 Prisma 根据 schema.prisma 自动生成的类型安全客户端
 
@@ -57,6 +60,38 @@ const prismaClientOptions = {
 // ============================================================
 
 /**
+ * 创建 Prisma Client 实例
+ * Prisma 7+ 需要使用驱动适配器
+ *
+ * 连接策略：
+ * - 应用运行时使用 DATABASE_URL（端口 6543，连接池）
+ * - Prisma 迁移时使用 DIRECT_URL（端口 5432，会话池）
+ */
+function createPrismaClient(): PrismaClient {
+  // 应用运行时使用 DATABASE_URL（连接池，端口 6543）
+  const connectionString = process.env.DATABASE_URL
+
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not defined in environment variables')
+  }
+
+  // 配置 pg Pool，处理 SSL 证书问题
+  // Supabase 使用自签名证书，需要允许未授权的连接
+  const pool = new Pool({
+    connectionString,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  })
+  const adapter = new PrismaPg(pool)
+
+  return new PrismaClient({
+    ...prismaClientOptions,
+    adapter,
+  })
+}
+
+/**
  * Prisma Client 实例
  *
  * 为什么用全局变量存储？
@@ -69,7 +104,13 @@ const prismaClientOptions = {
  * - 开发环境：将实例存储在 globalThis，热重载时复用已有实例
  * - 生产环境：正常创建实例（生产无热重载问题）
  */
-export const prisma = globalThis._prisma ?? new PrismaClient(prismaClientOptions)
+// 开发环境下清除全局实例，确保配置更新后重新创建
+if (process.env.NODE_ENV !== 'production' && globalThis._prisma) {
+  globalThis._prisma.$disconnect().catch(() => {})
+  globalThis._prisma = undefined
+}
+
+export const prisma = globalThis._prisma ?? createPrismaClient()
 // ?? (空值合并运算符): 如果 globalThis._prisma 存在就用它，否则创建新实例
 
 // ============================================================
