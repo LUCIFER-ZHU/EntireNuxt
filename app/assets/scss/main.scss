@@ -1,0 +1,28 @@
+// 全局重置
+body {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  color: $text-color;
+  background-color: $background-color;
+}
+
+
+.mnfont {
+  font-size: 34px;
+  line-height: 1;
+}
+
+/* ------------------------------------ Layout Utilities ------------------------------------ */
+.desktop-only {
+  display: block;
+  @media (max-width: 768px) {
+    display: none !important;
+  }
+}
+
+.mobile-only {
+  display: none;
+  @media (max-width: 768px) {
+    display: block !important;
+  }
+}

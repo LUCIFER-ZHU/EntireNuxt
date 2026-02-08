@@ -1,0 +1,22 @@
+/* Cookie Consent 自定义样式覆盖 */
+
+/* ============================================
+   CSS 变量覆盖（推荐方式）
+   ============================================ */
+:root {
+  /* 颜色配置 */
+  --cc-btn-primary-bg: #092991;        /* 主按钮背景 */
+  --cc-btn-primary-hover-bg: #2a4292;  /* 主按钮悬停 */
+  
+  /* 链接颜色 */
+  --cc-link-color: #092991;            /* 链接颜色 */
+  --cc-link-hover-color: #214ee4;      /* 链接悬停 */
+  
+  
+  /* 切换按钮（Toggle） */
+  --cc-toggle-bg-off: #9ca3af;         /* 关闭状态背景 */
+  --cc-toggle-bg-on: #092991;          /* 开启状态背景 */
+  --cc-toggle-bg-readonly: #d1d5db;    /* 只读状态背景 */
+  --cc-toggle-knob-bg: #ffffff;        /* 开关按钮颜色 */
+  
+}

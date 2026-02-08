@@ -1,0 +1,79 @@
+@font-face {
+  font-family: "mnfont"; /* Project id 5047839 */
+  src: url('/iconfont/iconfont.woff2?t=1761200195696') format('woff2'),
+       url('/iconfont/iconfont.woff?t=1761200195696') format('woff'),
+       url('/iconfont/iconfont.ttf?t=1761200195696') format('truetype');
+}
+
+.mnfont {
+  font-family: "mnfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mn-logo:before {
+  content: "\e647";
+}
+
+.mn-Message:before {
+  content: "\e645";
+}
+
+.mn-list:before {
+  content: "\e646";
+}
+
+.mn-edit:before {
+  content: "\e644";
+}
+
+.mn-local:before {
+  content: "\e63c";
+}
+
+.mn-people:before {
+  content: "\e63d";
+}
+
+.mn-Building-three:before {
+  content: "\e63e";
+}
+
+.mn-iphone:before {
+  content: "\e63f";
+}
+
+.mn-label:before {
+  content: "\e640";
+}
+
+.mn-cross-ring-two:before {
+  content: "\e641";
+}
+
+.mn-cycle:before {
+  content: "\e642";
+}
+
+.mn-chart-histogram:before {
+  content: "\e643";
+}
+
+.mn-search:before {
+  content: "\e636";
+}
+
+.mn-Password:before {
+  content: "\e637";
+}
+
+.mn-Comment:before {
+  content: "\e638";
+}
+
+.mn-Mail-open:before {
+  content: "\e639";
+}
+

@@ -1,0 +1,26 @@
+/* 第三方库样式 */
+@import "tailwindcss";
+@import "@nuxt/ui"; 
+
+@theme {
+  --container-8xl: 100%;
+}
+
+:root {
+  --ui-container: var(--container-8xl);
+  --ui-primary: #071C63;    /* 覆盖为蓝色 */
+  --text-sm: .7292vw;
+  --text-xs: .625vw;
+  --spacing: .2083vw;
+  --tw-ring-offset-width: 1px;
+}
+
+
+:root.is-mob{
+  --ui-container: var(--container-8xl);
+  --ui-primary: #071C63;    /* 覆盖为蓝色 */
+  --text-sm: 14px;
+  --text-xs: 12px;
+  --spacing: 4px;
+  --tw-ring-offset-width: 1px;
+}

@@ -1,0 +1,62 @@
+---
+alwaysApply: true
+---
+
+## 依赖库规范
+
+### UI组件库
+- **@nuxt/ui**: `^4.1.0`
+- 按钮等相关UI默认使用该库
+- 文档地址：https://ui.nuxt.com/docs/components
+
+### 图片处理库
+- **@nuxt/image**: `1.11.0`
+- 遇到 `img` 标签默认使用该库的 `NuxtImg` 组件
+
+## 响应式设计规范
+
+### 字体大小
+- **PC端和移动端统一使用** `clamp(min_px, vw_value, max_px)` 格式
+- 示例：`font-size: clamp(14px, 1.0417vw, 20px);`
+- 确保字体在不同屏幕尺寸下都能良好显示
+
+### 移动端间距
+- 移动端所有间距相关属性（padding, margin, gap, border-radius等）统一使用 `vw` 单位
+- 示例：`padding: 5.3333vw 4.2667vw;`、`gap: 2.6667vw;`、`border-radius: 2.6667vw;`
+- 确保移动端布局在不同设备上都能正确适配
+
+### SCSS语法规范
+- 当使用 `@include` 混入后，如果还需要添加额外样式，**必须**用 `&{}` 包起来
+- 正确示例：
+  ```scss
+  .button {
+    @include default-btn;
+    
+    & {
+      font-size: clamp(12px, 3.2vw, 14px);
+      padding: 2.6667vw 4.2667vw;
+    }
+  }
+  ```
+- 错误示例（会导致SCSS编译错误）：
+  ```scss
+  .button {
+    @include default-btn;
+    font-size: clamp(12px, 3.2vw, 14px); // ❌ 错误
+  }
+  ```
+
+### 移动端布局规范
+- 使用 `useDeviceDetection()` composable 检测设备类型：`const { isMobile } = useDeviceDetection()`
+- 在模板中使用 `:class="{ 'is-mobile': isMobile }"` 添加移动端类名
+- **局部使用 `v-if`**：只在需要区分的地方使用 `v-if="!isMobile"` 和 `v-if="isMobile"`，不要整个模板一刀切
+- 保持原有结构，在需要区分的地方局部区分，其他部分共用
+- **代码复用原则**：能复用就复用，优先使用 CSS（如 grid、flex）来区分PC和移动端布局，而不是用 `v-if` 创建两套内容。只有当结构完全不同时才使用 `v-if` 区分
+- 示例：列表内容相同，只是PC端4列、移动端2列，应该统一内容，用CSS grid的 `grid-template-columns` 来区分
+
+### 样式组织规范
+- PC端样式和移动端样式分开组织
+- **`/* ------------------------------------Mobile样式----------------------------*/` 注释是分水岭**：
+  - 注释**上方**：PC端样式
+  - 注释**下方**：移动端样式（使用 `.is-mobile` 类名或独立的移动端类名如 `.mobile-xxx` 来区分）
+- PC端样式在前，移动端样式在后
