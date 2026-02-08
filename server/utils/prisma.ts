@@ -15,8 +15,18 @@ import { PrismaClient } from '@prisma/client'
 // 为什么需要: 在开发环境热重载时复用同一个实例
 // ============================================================
 declare global {
-  // 使用 var 而不是 const/let 因为 global 对象属性必须是可写的
-  var prisma: PrismaClient | undefined
+  // 使用不同的名称避免与 export const prisma 冲突
+  var _prisma: PrismaClient | undefined
+}
+
+/**
+ * 断言 prisma 实例已初始化
+ * 使用此函数确保在使用 prisma 之前它已经可用
+ */
+function assertPrismaInitialized(prisma: PrismaClient | undefined): asserts prisma is PrismaClient {
+  if (!prisma) {
+    throw new Error('Prisma client is not initialized. Please run "pnpm db:generate" first.')
+  }
 }
 
 // ============================================================
@@ -26,13 +36,13 @@ declare global {
 const prismaClientOptions = {
   log: process.env.NODE_ENV === 'development'
     ? [
-        { emit: 'stdout', level: 'query' },    // 记录所有 SQL 查询
-        { emit: 'stdout', level: 'error' },    // 记录错误
-        { emit: 'stdout', level: 'warn' },     // 记录警告
-        { emit: 'stdout', level: 'info' },     // 记录一般信息
+        { emit: 'stdout' as const, level: 'query' as const },    // 记录所有 SQL 查询
+        { emit: 'stdout' as const, level: 'error' as const },    // 记录错误
+        { emit: 'stdout' as const, level: 'warn' as const },     // 记录警告
+        { emit: 'stdout' as const, level: 'info' as const },     // 记录一般信息
       ]
     : [
-        { emit: 'stdout', level: 'error' },    // 生产环境只记录错误（减少日志量）
+        { emit: 'stdout' as const, level: 'error' as const },    // 生产环境只记录错误（减少日志量）
       ],
   // log 配置说明:
   // - query: 所有执行的 SQL 查询（开发时很有用，可以看到实际执行的 SQL）
@@ -59,14 +69,14 @@ const prismaClientOptions = {
  * - 开发环境：将实例存储在 globalThis，热重载时复用已有实例
  * - 生产环境：正常创建实例（生产无热重载问题）
  */
-export const prisma = globalThis.prisma ?? new PrismaClient(prismaClientOptions)
-// ?? (空值合并运算符): 如果 globalThis.prisma 存在就用它，否则创建新实例
+export const prisma = globalThis._prisma ?? new PrismaClient(prismaClientOptions)
+// ?? (空值合并运算符): 如果 globalThis._prisma 存在就用它，否则创建新实例
 
 // ============================================================
 // 4. 开发环境：挂载到全局对象
 // ============================================================
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma
+  globalThis._prisma = prisma
   // 将实例挂载到 globalThis，下次热重载时可以复用
 }
 

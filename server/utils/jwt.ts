@@ -286,6 +286,11 @@ export async function verifyToken(token: string): Promise<TokenPayload> {
 
   const [encodedHeader, encodedPayload, encodedSignature] = parts
 
+  // 确保所有部分都存在
+  if (!encodedHeader || !encodedPayload || !encodedSignature) {
+    throw new Error('Invalid token format: missing parts')
+  }
+
   // 解码 Payload 检查过期时间（在验证签名前，先检查过期时间更高效）
   let payload: TokenPayload
   try {
@@ -337,7 +342,10 @@ export function decodeToken(token: string): TokenPayload | null {
     const parts = token.split('.')
     if (parts.length !== 3) return null
 
-    const payload = JSON.parse(base64UrlDecode(parts[1]))
+    const encodedPayload = parts[1]
+    if (!encodedPayload) return null
+
+    const payload = JSON.parse(base64UrlDecode(encodedPayload))
     return payload
   } catch {
     return null
@@ -386,7 +394,7 @@ export function extractBearerToken(authHeader: string | null | undefined): strin
 
   // 格式: "Bearer <token>"
   const match = authHeader.match(/^Bearer\s+(.+)$/i)
-  return match ? match[1] : null
+  return match ? (match[1] ?? null) : null
 }
 
 /**

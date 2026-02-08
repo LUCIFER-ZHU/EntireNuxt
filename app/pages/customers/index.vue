@@ -151,7 +151,8 @@ function handlePageChange(page: number) {
 /**
  * 每页数量变化
  */
-function handlePageSizeChange(pageSize: number) {
+function handlePageSizeChange(pageSize: number | undefined) {
+  if (!pageSize) return
   queryParams.pageSize = pageSize
   queryParams.page = 1
   fetchCustomers()
@@ -307,7 +308,7 @@ onMounted(() => {
           class="filter-select"
         />
         <UButton color="primary" @click="handleSearch">搜索</UButton>
-        <UButton color="gray" variant="soft" @click="handleReset">重置</UButton>
+        <UButton color="neutral" variant="soft" @click="handleReset">重置</UButton>
       </div>
     </UCard>
 
@@ -358,7 +359,7 @@ onMounted(() => {
               编辑
             </UButton>
             <UButton
-              color="red"
+              color="error"
               variant="ghost"
               icon="i-heroicons-trash"
               size="xs"
@@ -386,7 +387,7 @@ onMounted(() => {
             { label: '50条/页', value: 50 },
           ]"
           class="page-size-select"
-          @update:model-value="handlePageSizeChange"
+          @update:model-value="(handlePageSizeChange as any)"
         />
       </div>
     </UCard>
@@ -452,7 +453,7 @@ onMounted(() => {
 
         <template #footer>
           <div class="modal-footer">
-            <UButton color="gray" variant="soft" @click="showModal = false">
+            <UButton color="neutral" variant="soft" @click="showModal = false">
               取消
             </UButton>
             <UButton color="primary" :loading="submitting" @click="handleSubmit">
@@ -476,10 +477,10 @@ onMounted(() => {
 
         <template #footer>
           <div class="modal-footer">
-            <UButton color="gray" variant="soft" @click="showDeleteConfirm = false">
+            <UButton color="neutral" variant="soft" @click="showDeleteConfirm = false">
               取消
             </UButton>
-            <UButton color="red" :loading="submitting" @click="handleDelete">
+            <UButton color="error" :loading="submitting" @click="handleDelete">
               确认删除
             </UButton>
           </div>

@@ -56,9 +56,9 @@ export default defineEventHandler(async (event) => {
     const validationResult = loginSchema.safeParse(body)
 
     if (!validationResult.success) {
-      const errors = validationResult.error.errors.map((err) => ({
-        field: err.path.join('.'),
-        message: err.message,
+      const errors = validationResult.error.issues.map((issue) => ({
+        field: issue.path.join('.'),
+        message: issue.message,
       }))
 
       return createBadRequestResponse(
@@ -80,7 +80,7 @@ export default defineEventHandler(async (event) => {
 
       if (secretKey) {
         const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
-        const verifyResponse = await $fetch(verifyUrl, {
+        const verifyResponse: any = await $fetch(verifyUrl, {
           method: 'POST',
           body: {
             secret: secretKey,

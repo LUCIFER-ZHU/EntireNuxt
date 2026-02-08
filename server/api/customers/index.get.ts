@@ -85,9 +85,9 @@ export default defineEventHandler(async (event) => {
     const queryResult = querySchema.safeParse(getQuery(event))
 
     if (!queryResult.success) {
-      const errors = queryResult.error.errors.map((err) => ({
-        field: err.path.join('.'),
-        message: err.message,
+      const errors = queryResult.error.issues.map((issue) => ({
+        field: issue.path.join('.'),
+        message: issue.message,
       }))
 
       return createBadRequestResponse(

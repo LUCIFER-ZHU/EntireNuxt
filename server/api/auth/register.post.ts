@@ -117,9 +117,9 @@ export default defineEventHandler(async (event) => {
 
     if (!validationResult.success) {
       // 验证失败，格式化错误信息
-      const errors = validationResult.error.errors.map((err) => ({
-        field: err.path.join('.'),  // 错误字段路径（如 "email" 或 "user.name"）
-        message: err.message,        // 错误信息
+      const errors = validationResult.error.issues.map((issue) => ({
+        field: issue.path.join('.'),  // 错误字段路径（如 "email" 或 "user.name"）
+        message: issue.message,        // 错误信息
       }))
 
       // 返回 400 错误响应
@@ -147,7 +147,7 @@ export default defineEventHandler(async (event) => {
         // 调用 Cloudflare Turnstile 验证 API
         const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
-        const verifyResponse = await $fetch(verifyUrl, {
+        const verifyResponse: any = await $fetch(verifyUrl, {
           method: 'POST',
           body: {
             secret: secretKey,
