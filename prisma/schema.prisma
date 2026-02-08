@@ -115,6 +115,9 @@ model User {
   contactForms ContactForm[]
     // 关联 ContactForm 模型（用户提交的询盘表单）
 
+  customers Customer[]
+    // 关联 Customer 模型（业务员跟进的客户）
+
   // --- 索引优化 ---
   @@index([email])
     // 为 email 创建索引，加速登录查询
@@ -335,4 +338,100 @@ enum FormStatus {
   PROCESSING // 处理中
   COMPLETED  // 已完成
   CANCELLED  // 已取消
+}
+
+// --------------------------------------------------------
+// 4.5 客户等级枚举
+// --------------------------------------------------------
+enum CustomerLevel {
+  VIP      // VIP 客户
+  GOLD     // 金牌客户
+  SILVER   // 银牌客户
+  BRONZE   // 铜牌客户
+  REGULAR  // 普通客户
+}
+
+// --------------------------------------------------------
+// 4.6 客户状态枚举
+// --------------------------------------------------------
+enum CustomerStatus {
+  ACTIVE    // 活跃
+  INACTIVE  //  inactive
+  POTENTIAL // 潜在客户
+  LOST      // 流失客户
+}
+
+// ============================================================
+// 5. 客户模型 (Customer)
+// 说明: 客户信息表，用于 CRM 管理
+// 关系:
+//   - 多对1: Customer → User (一个客户可能由多个业务员跟进)
+// ============================================================
+model Customer {
+  // --- 主键 ---
+  id String @id @default(uuid()) @db.Uuid
+
+  // --- 基本信息 ---
+  name String @db.VarChar(100)
+    // 客户姓名/公司名称
+
+  email String? @db.VarChar(255)
+    // 客户邮箱
+
+  phone String? @db.VarChar(20)
+    // 客户电话
+
+  company String? @db.VarChar(200)
+    // 公司名称
+
+  address String? @db.Text
+    // 详细地址
+
+  // --- 业务信息 ---
+  level CustomerLevel @default(REGULAR)
+    // 客户等级
+
+  status CustomerStatus @default(ACTIVE)
+    // 客户状态
+
+  source String? @db.VarChar(100)
+    // 客户来源（如：网站、推荐、展会等）
+
+  industry String? @db.VarChar(100)
+    // 所属行业
+
+  notes String? @db.Text
+    // 备注信息
+
+  // --- 关联业务员 ---
+  assignedTo String? @db.Uuid
+    // 分配给哪个用户（业务员）
+
+  assignedUser User? @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+    // 关联到 User 模型
+
+  // --- 时间戳 ---
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt @db.Timestamp(6)
+
+  // --- 索引优化 ---
+  @@index([name])
+    // 加速按名称搜索
+
+  @@index([email])
+    // 加速按邮箱搜索
+
+  @@index([level])
+    // 加速按等级筛选
+
+  @@index([status])
+    // 加速按状态筛选
+
+  @@index([assignedTo])
+    // 加速查找某个业务员的客户
+
+  @@index([createdAt])
+    // 加速按创建时间排序
+
+  @@map("customers")
 }

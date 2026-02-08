@@ -29,12 +29,14 @@ export default defineConfig({
   // 3. 数据源配置（Prisma 7+ 新方式）
   // --------------------------------------------------------
   // 注意：在 Prisma 7+ 中，数据库连接 URL 从 schema.prisma 移到此处
+  // Prisma 7.3.0 的 defineConfig 类型只支持 url 和 shadowDatabaseUrl
+  // 对于 Supabase，迁移时使用 DIRECT_URL，运行时使用 DATABASE_URL
   datasource: {
     // 应用运行时使用的连接 URL（连接池）
+    // 在 Supabase 中，这是 Connection Pooler URL (端口 6543)
     url: process.env.DATABASE_URL,
 
-    // 迁移时使用的直接连接 URL
-    // 某些托管数据库（如 Supabase）需要区分连接池和直接连接
-    directUrl: process.env.DIRECT_URL,
+    // 影子数据库 URL（可选，用于迁移时对比 schema 差异）
+    // shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
 })

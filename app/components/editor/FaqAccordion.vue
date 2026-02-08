@@ -46,7 +46,7 @@
               <div class="table-row">
                 <div class="td text-style-bold">Production halt due to annual malfunction</div>
                 <div class="td text-style-common">12 days</div>
-                <div class="td text-style-common">*<3 days</div>
+                <div class="td text-style-common">*&lt;3 days</div>
               </div>
             </div>
           </div>

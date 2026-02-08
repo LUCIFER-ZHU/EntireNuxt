@@ -15,10 +15,8 @@ import { PrismaClient } from '@prisma/client'
 // 为什么需要: 在开发环境热重载时复用同一个实例
 // ============================================================
 declare global {
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined
   // 使用 var 而不是 const/let 因为 global 对象属性必须是可写的
-  // eslint-disable-next-line 禁用规则是因为 TypeScript 推荐用 const/let
+  var prisma: PrismaClient | undefined
 }
 
 // ============================================================
